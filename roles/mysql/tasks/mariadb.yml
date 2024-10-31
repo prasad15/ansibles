@@ -1,0 +1,48 @@
+---
+- name: check if DB data already exits
+  stat: path=/opt/docker/mariadb/{{MARIA_CONT_NAME}}
+  register: dbcheck
+
+- name: fail if already run on host
+  fail: msg="!!! STOP !!!, Docker/DB data already exits @ /opt/docker/mariadb/{{MARIA_CONT_NAME}}"
+  when: dbcheck.stat.exists
+  
+## Fix configs spectific to MariaDB, my.cnf does not work ##
+
+# - name: Prepare mariadb directory for docker
+#   file:
+#     path: /opt/docker/mariadb/{{MARIA_CONT_NAME}}/conf
+#     state: directory
+
+# - name: Generate my.cnf from template
+#   template:
+#     src: my_cnf.j2
+#     dest: /opt/docker/mariadb/{{MARIA_CONT_NAME}}/conf/my.cnf
+#     mode: 0644
+
+- name: Set permissions for logs dir
+  file:
+    path: /opt/docker/mariadb/{{MARIA_CONT_NAME}}/logs
+    state: directory
+    mode: 0667
+
+- name: mariadb Container
+  docker_container:
+    name: "{{MARIA_CONT_NAME}}"
+    image: mariadb:latest
+    state: started
+    volumes:
+      #- /opt/docker/mariadb/{{MARIA_CONT_NAME}}/conf/my.cnf:/etc/my.cnf:ro
+      - /opt/docker/mariadb/{{MARIA_CONT_NAME}}/db-data:/var/lib/mariadb
+      - /opt/docker/mariadb/{{MARIA_CONT_NAME}}/logs:/var/log
+    env:
+      MARIADB_ROOT_PASSWORD: docker123
+      MARIADB_USER: "{{DB_USER}}"
+      MARIADB_PASSWORD: docker123
+      MARIADB_ROOT_HOST: "{{DOCK_BR_IP}}"
+    ports:
+      - "{{MARIA_PORT}}:3306"
+
+- name: Wait for 40 seconds for mariadb docker to become healthy.
+  wait_for: timeout=40
+

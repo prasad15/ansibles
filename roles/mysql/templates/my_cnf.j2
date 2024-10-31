@@ -1,0 +1,16 @@
+[mysqld]
+skip-host-cache
+skip-name-resolve
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+secure-file-priv=/var/lib/mysql-files
+user=mysql
+
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+
+## customizations
+server-id = {{ ansible_date_time.epoch }}

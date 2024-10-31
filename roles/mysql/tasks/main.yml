@@ -1,0 +1,8 @@
+---
+- name: MySQL
+  include_tasks: mysql.yml
+  when: sql == 'mysql'
+
+- name: MariaDB
+  include_tasks: mariadb.yml
+  when: sql == 'mariadb'

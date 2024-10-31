@@ -1,0 +1,9 @@
+---
+- name: Install Docker.io
+  ansible.builtin.apt:
+    pkg:
+    - runc
+    - containerd
+    - docker.io
+    - docker-compose
+    state: present

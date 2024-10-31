@@ -1,0 +1,46 @@
+---
+- name: check if DB data already exits
+  stat: path=/opt/docker/mysql/{{MYSQL_CONT_NAME}}
+  register: dbcheck
+
+- name: fail if already run on host
+  fail: msg="!!! STOP !!!, Docker/DB data already exits @ /opt/docker/mysql/{{MYSQL_CONT_NAME}}"
+  when: dbcheck.stat.exists
+  
+- name: Prepare mysql directory for docker
+  file:
+    path: /opt/docker/mysql/{{MYSQL_CONT_NAME}}/conf
+    state: directory
+
+- name: Generate my.cnf from template
+  template:
+    src: my_cnf.j2
+    dest: /opt/docker/mysql/{{MYSQL_CONT_NAME}}/conf/my.cnf
+    mode: 0644
+
+- name: Set permissions for logs dir
+  file:
+    path: /opt/docker/mysql/{{MYSQL_CONT_NAME}}/logs
+    state: directory
+    mode: 0667
+
+- name: MySQL Container
+  docker_container:
+    name: "{{MYSQL_CONT_NAME}}"
+    image: mysql/mysql-server:latest
+    state: started
+    volumes:
+      - /opt/docker/mysql/{{MYSQL_CONT_NAME}}/conf/my.cnf:/etc/my.cnf:ro
+      - /opt/docker/mysql/{{MYSQL_CONT_NAME}}/db-data:/var/lib/mysql
+      - /opt/docker/mysql/{{MYSQL_CONT_NAME}}/logs:/var/log
+    env:
+      MYSQL_ROOT_PASSWORD: docker123
+      MYSQL_USER: "{{DB_USER}}"
+      MYSQL_PASSWORD: docker123
+      MYSQL_ROOT_HOST: "{{DOCK_BR_IP}}"
+    ports:
+      - "{{MYSQL_PORT}}:3306"
+
+- name: Wait for 40 seconds for mysql docker to become healthy.
+  wait_for: timeout=40
+

@@ -43,6 +43,3 @@
     ports:
       - "{{MARIA_PORT}}:3306"
 
-- name: Wait for 40 seconds for mariadb docker to become healthy.
-  wait_for: timeout=40
-

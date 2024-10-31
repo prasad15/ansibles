@@ -7,3 +7,9 @@
     - docker.io
     - docker-compose
     state: present
+
+- name: Start and enable docker service
+  ansible.builtin.systemd:
+    name: docker.service
+    enabled: yes
+    state: started
